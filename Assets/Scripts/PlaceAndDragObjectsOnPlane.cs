@@ -296,9 +296,36 @@ public class PlaceAndDragObjectsOnPlane : MonoBehaviour
             Debug.Log("UnityEngine.InputSystem.EnhancedTouch.Touch is over a UI element, ignoring AR interaction.");
             return;
         }
+        foreach (var touch in UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches)
+        {
+            if (IsTouchOverUI(touch.screenPosition))
+            {
+                Debug.Log("Touch is over a UI element, ignoring AR interaction.");
+                return;
+            }
+        }
 
         // Handle spawning, selection, and deselection (always active)
         HandleTouch(screenPosition);
+    }
+
+    private bool IsTouchOverUI(Vector2 touchPosition)
+    {
+        if (EventSystem.current == null)
+            return false;
+
+        // Create a PointerEventData with the touch position
+        PointerEventData eventData = new PointerEventData(EventSystem.current)
+        {
+            position = touchPosition
+        };
+
+        // Raycast to check if the touch hits any UI elements
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, results);
+
+        // Return true if any UI element was hit
+        return results.Count > 0;
     }
 
     void HandleTouch(Vector3 screenPosition)
@@ -322,7 +349,7 @@ public class PlaceAndDragObjectsOnPlane : MonoBehaviour
                         selectedItem = obj;
                         EnableEmission(selectedItem);
                         isDragging = modeSelector.IsTranslationEnabled; // Only drag if Translation is enabled
-                        modeSelector.SetDeleteButtonVisibility(true);
+                        // modeSelector.SetDeleteButtonVisibility(true);
                         Debug.Log($"Selected object: {selectedItem.name}");
                     }
                     else if (modeSelector.IsTranslationEnabled)
